@@ -63,14 +63,24 @@
 #define DEFER(id) id EMPTY()
 #define OBSTRUCT(id) id DEFER(EMPTY)()
      
-#define REPEAT_S(s, n, m, ...) \
-        IF(n)(REPEAT_I, EAT)(OBSTRUCT(), INC(s), DEC(n), m, __VA_ARGS__)
+//#define REPEAT_S(s, n, m, ...) \
+//        IF(n)(REPEAT_I, EAT)(OBSTRUCT(), INC(s), DEC(n), m, __VA_ARGS__)
+//        
+//#define REPEAT_INDIRECT() REPEAT_S
+//#define REPEAT_I(_, s, n, m, ...) \
+//        EXPR_S _(s)( \
+//            REPEAT_INDIRECT _()(s, n, m, __VA_ARGS__) \
+//        )\
+//        m _(s, n, __VA_ARGS__)
         
-#define REPEAT_INDIRECT() REPEAT_S
+#define REPEAT_S(s, n, m, ...) \
+        REPEAT_I(OBSTRUCT(), INC(s), n, m, __VA_ARGS__)
+        
+#define REPEAT_INDIRECT() REPEAT_I
 #define REPEAT_I(_, s, n, m, ...) \
-        EXPR_S _(s)( \
-            REPEAT_INDIRECT _()(s, n, m, __VA_ARGS__) \
-        )\
+        WHEN _(n)(EXPR_S _(s)( \
+            REPEAT_INDIRECT _()(OBSTRUCT _(), INC _(s), DEC _(n), m, __VA_ARGS__) \
+        ))\
         m _(s, n, __VA_ARGS__)
 
 #define COMMA() ,
