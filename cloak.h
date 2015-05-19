@@ -5,6 +5,9 @@
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
 
+#ifndef CLOAK_GUARD_H
+#define CLOAK_GUARD_H
+
 #define CAT(a, ...) PRIMITIVE_CAT(a, __VA_ARGS__)
 #define PRIMITIVE_CAT(a, ...) a ## __VA_ARGS__
 
@@ -122,4 +125,4 @@ IIF(BITAND(IS_COMPARABLE(x))(IS_COMPARABLE(y)) ) \
 
 #define COMMA_IF(n) IF(n)(COMMA, EAT)()
 
-
+#endif
