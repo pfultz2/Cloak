@@ -1,5 +1,15 @@
+
+
 #define CAT(a, ...) PRIMITIVE_CAT(a, __VA_ARGS__)
 #define PRIMITIVE_CAT(a, ...) a ## __VA_ARGS__
+
+#define COMPL(b) PRIMITIVE_CAT(COMPL_, b)
+#define COMPL_0 1
+#define COMPL_1 0
+
+#define BITAND(x) PRIMITIVE_CAT(BITAND_, x)
+#define BITAND_0(y) 0
+#define BITAND_1(y) y
 
 #define INC(x) PRIMITIVE_CAT(INC_, x)
 #define INC_0 1
@@ -25,23 +35,15 @@
 #define DEC_8 7
 #define DEC_9 8
 
-#define EXPR_S(s) PRIMITIVE_CAT(EXPR_, s)
-#define EXPR_0(...) __VA_ARGS__
-#define EXPR_1(...) __VA_ARGS__
-#define EXPR_2(...) __VA_ARGS__
-#define EXPR_3(...) __VA_ARGS__
-#define EXPR_4(...) __VA_ARGS__
-#define EXPR_5(...) __VA_ARGS__
-#define EXPR_6(...) __VA_ARGS__
-#define EXPR_7(...) __VA_ARGS__
-#define EXPR_8(...) __VA_ARGS__
-#define EXPR_9(...) __VA_ARGS__
-
 #define CHECK_N(x, n, ...) n
 #define CHECK(...) CHECK_N(__VA_ARGS__, 0,)
+#define PROBE(x) x, 1,
+
+#define IS_PAREN(x) CHECK(IS_PAREN_PROBE x)
+#define IS_PAREN_PROBE(...) PROBE(~)
 
 #define NOT(x) CHECK(PRIMITIVE_CAT(NOT_, x))
-#define NOT_0 ~, 1,
+#define NOT_0 PROBE(~)
 
 #define COMPL(b) PRIMITIVE_CAT(COMPL_, b)
 #define COMPL_0 1
@@ -62,26 +64,54 @@
 #define EMPTY()
 #define DEFER(id) id EMPTY()
 #define OBSTRUCT(id) id DEFER(EMPTY)()
-     
-//#define REPEAT_S(s, n, m, ...) \
-//        IF(n)(REPEAT_I, EAT)(OBSTRUCT(), INC(s), DEC(n), m, __VA_ARGS__)
-//        
-//#define REPEAT_INDIRECT() REPEAT_S
-//#define REPEAT_I(_, s, n, m, ...) \
-//        EXPR_S _(s)( \
-//            REPEAT_INDIRECT _()(s, n, m, __VA_ARGS__) \
-//        )\
-//        m _(s, n, __VA_ARGS__)
-        
-#define REPEAT_S(s, n, m, ...) \
-        REPEAT_I(OBSTRUCT(), INC(s), n, m, __VA_ARGS__)
-        
-#define REPEAT_INDIRECT() REPEAT_I
-#define REPEAT_I(_, s, n, m, ...) \
-        WHEN _(n)(EXPR_S _(s)( \
-            REPEAT_INDIRECT _()(OBSTRUCT _(), INC _(s), DEC _(n), m, __VA_ARGS__) \
-        ))\
-        m _(s, n, __VA_ARGS__)
+
+#define EVAL(...)  EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
+#define EVAL1(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
+#define EVAL2(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
+#define EVAL3(...) EVAL4(EVAL4(EVAL4(__VA_ARGS__)))
+#define EVAL4(...) EVAL5(EVAL5(EVAL5(__VA_ARGS__)))
+#define EVAL5(...) __VA_ARGS__
+
+#define REPEAT(count, macro, ...) \
+    WHEN(count) \
+    ( \
+        OBSTRUCT(REPEAT_INDIRECT) () \
+        ( \
+            DEC(count), macro, __VA_ARGS__ \
+        ) \
+        OBSTRUCT(macro) \
+        ( \
+            DEC(count), __VA_ARGS__ \
+        ) \
+    )
+#define REPEAT_INDIRECT() REPEAT
+
+#define WHILE(pred, op, ...) \
+    IF(pred(__VA_ARGS__)) \
+    ( \
+        OBSTRUCT(WHILE_INDIRECT) () \
+        ( \
+            pred, op, op(__VA_ARGS__) \
+        ), \
+        __VA_ARGS__ \
+    )
+#define WHILE_INDIRECT() WHILE
+
+#define PRIMITIVE_COMPARE(x, y) IS_PAREN \
+( \
+    COMPARE_ ## x ( COMPARE_ ## y) (())  \
+)
+
+#define IS_COMPARABLE(x) IS_PAREN( CAT(COMPARE_, x) (()) )
+
+#define NOT_EQUAL(x, y) \
+IIF(BITAND(IS_COMPARABLE(x))(IS_COMPARABLE(y)) ) \
+( \
+   PRIMITIVE_COMPARE, \
+   1 EAT \
+)(x, y)
+
+#define EQUAL(x, y) COMPL(NOT_EQUAL(x, y))
 
 #define COMMA() ,
 
